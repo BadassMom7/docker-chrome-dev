@@ -2,15 +2,15 @@ import argparse
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 
-
-def take_snapshot(url, screenshot=None, pdf=None, width=1920, height=1200):
+def take_snapshot(url, screenshot=None, pdf=None, width=1920, height=1200, sandbox=True):
     if screenshot and pdf:
         raise ValueError('Pass either screenshot or PDF; Chrome headless can\'t deal with both at present')
     command = list(filter(None, [
         'google-chrome',
-        '--no-sandbox',
+        ('--no-sandbox' if not sandbox else None),
         '--headless',
         '--disable-gpu',
         '--disable-audio',
@@ -39,8 +39,15 @@ def main():
     ap.add_argument('-h', '--height', default=1200)
     ap.add_argument('-s', '--screenshot', default=None)
     ap.add_argument('-p', '--pdf', default=None)
+    ap.add_argument('--sandbox', dest='sandbox', action='store_true', default=None)
+    ap.add_argument('--no-sandbox', dest='sandbox', action='store_false')
     ap.add_argument('url')
     args = ap.parse_args()
+    if args.sandbox is None:  # No --sandbox/--no-sandbox set?
+        # Docker for Mac's kernel doesn't have userns enabled, so Chrome can't enable its sandbox.
+        # Related issue: https://github.com/jessfraz/dockerfiles/issues/65
+        # (Let's assume all Mac users are using Docker for Mac.)
+        args.sandbox = (sys.platform != 'darwin')
     take_snapshot(**vars(args))
 
 
