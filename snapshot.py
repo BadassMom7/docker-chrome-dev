@@ -21,7 +21,7 @@ def take_snapshot(url, screenshot=None, pdf=None, width=1920, height=1200, sandb
     ]))
     vol_path = tempfile.mkdtemp(dir='/tmp')
     try:
-        subprocess.check_call(['docker', 'run', '-it', '-v', '%s:/out' % vol_path, 'chrome-dev'] + command)
+        subprocess.check_call(['docker', 'run', '--rm', '-it', '-v', '%s:/out' % vol_path, 'chrome-dev'] + command)
         if screenshot:
             shutil.copyfile('%s/screenshot.png' % vol_path, screenshot)
             print('Wrote %s' % screenshot)
